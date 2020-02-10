@@ -30,7 +30,7 @@ class Server {
   }
 
   listen(port, host, callback) {
-    this.listeningApp.listen(port, host, (err) => {
+    this.listeningApp.listen(port, host, err => {
       this.showStatus();
 
       if (callback) {
