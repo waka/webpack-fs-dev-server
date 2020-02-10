@@ -5,7 +5,7 @@ const createLogger = (options = {}) => {
   if (options.quiet) {
     level = 'silent';
   }
-  return log({ name: 'wrds', level, timestamp: options.logTime });
+  return log({ name: 'webpack-fs-dev-server', level, timestamp: options.logTime });
 };
 
 export { createLogger };

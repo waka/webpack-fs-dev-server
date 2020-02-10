@@ -10,8 +10,8 @@ const yargs = require('yargs');
 const cli = require('./cli');
 
 // lib
-const Server = require('../lib/server');
-const { info, error } = require('../lib/utils/color');
+const { createServer } = require('../lib/server');
+const { info, error } = require('../lib/utils/colors');
 const { createLogger } = require('../lib/utils/logger');
 const { setupExitSignals } = require('../lib/utils/signals');
 
@@ -33,7 +33,7 @@ function startDevServer(config, options) {
   }
 
   try {
-    server = new Server(compiler, options, logger);
+    server = createServer(compiler, options, logger);
     serverData.server = server;
   } catch (err) {
     if (err.name === 'ValidationError') {

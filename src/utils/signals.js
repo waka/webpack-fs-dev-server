@@ -1,7 +1,7 @@
 const SIGNALS = ['SIGINT', 'SIGTERM'];
 
 const setupExitSignals = (serverData = {}) => {
-  signals.forEach(signal => {
+  SIGNALS.forEach(signal => {
     process.on(signal, () => {
       if (serverData.server) {
         // eslint-disable-next-line no-process-exit
