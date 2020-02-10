@@ -1,0 +1,42 @@
+{
+  "name": "webpack-fs-dev-server",
+  "version": "1.0.0",
+  "description": "Build with local file.",
+  "bin": "bin/webpack-fs-dev-server.js",
+  "main": "lib/server.js",
+  "files": [
+    "bin",
+    "lib"
+  ],
+  "scripts": {
+    "clean": "rimraf lib/",
+    "build": "babel src/ --out-dir lib/",
+    "example": "node examples/run-example.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "rimraf": "^3.0.0",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "webpack-log": "^2.0.0",
+    "yargs": "12.0.5"
+  },
+  "peerDependencies": {
+    "webpack": "^4.0.0 || ^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "webpack-cli": {
+      "optional": true
+    }
+  },
+  "author": "yo_waka",
+  "bugs": "https://github.com/waka/webpack-wakadev-server/issues",
+  "homepage": "https://github.com/waka/webpack-remote-dev-server#readme",
+  "repository": "https://github.com/waka/webpack-remote-dev-server.git",
+  "license": "MIT"
+}
