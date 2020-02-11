@@ -15,11 +15,11 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "commander": "^4.1.1",
     "internal-ip": "^4.3.0",
     "killable": "^1.0.1",
     "serve-handler": "^6.1.2",
-    "webpack-log": "^2.0.0",
-    "yargs": "12.0.5"
+    "webpack-log": "^2.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -39,8 +39,8 @@
     }
   },
   "author": "yo_waka",
-  "bugs": "https://github.com/waka/webpack-wakadev-server/issues",
-  "homepage": "https://github.com/waka/webpack-remote-dev-server#readme",
-  "repository": "https://github.com/waka/webpack-remote-dev-server.git",
+  "bugs": "https://github.com/waka/webpack-fs-dev-server/issues",
+  "homepage": "https://github.com/waka/webpack-fs-dev-server#readme",
+  "repository": "https://github.com/waka/webpack-fs-dev-server.git",
   "license": "MIT"
 }

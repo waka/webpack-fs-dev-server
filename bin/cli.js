@@ -1,10 +1,10 @@
 'use strict';
 
-const options = require('./options');
+const fs = require('fs');
+const path = require('path');
+const program = require('commander');
 
-const getVersions = () => {
-  return `webpack-remote-dev-server ${require('../package.json').version}`;
-};
+const cwd = process.cwd();
 
 const isAbsoluteUrl = (url) => {
   if (typeof url !== 'string') {
@@ -19,72 +19,47 @@ const isAbsoluteUrl = (url) => {
   return /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(url);
 };
 
-const processArgs = (yargs) => {
-  // webpack-cli@3.3 path : 'webpack-cli/bin/config/config-yargs'
-  let configYargsPath;
-  try {
-    require.resolve('webpack-cli/bin/config/config-yargs');
-    configYargsPath = 'webpack-cli/bin/config/config-yargs';
-  } catch (e) {
-    configYargsPath = 'webpack-cli/bin/config-yargs';
-  }
-  // eslint-disable-next-line import/no-extraneous-dependencies
-  // eslint-disable-next-line import/no-dynamic-require
-  require(configYargsPath)(yargs);
+const processArgs = () => {
+  program.version('v1.0.0');
+  program.option(
+    '-c, --config <path>',
+    'path to webpack.config.js, default to ./webpack.config.js',
+    'webpack.config.js'
+  );
+  program.option(
+    '-m, --mode <development or production>',
+    'running mode for webpack, default to development',
+    'development'
+  );
+  program.parse(process.argv);
 
-  // It is important that this is done after the webpack yargs config,
-  // so it overrides webpack's version info.
-  yargs.version(getVersions());
-  yargs.options(options);
-
-  return yargs.argv;
+  return program;
 };
 
-const processConfig = (yargs, argv) => {
-  // webpack-cli@3.3 path : 'webpack-cli/bin/utils/convert-argv'
-  let convertArgvPath;
-  try {
-    require.resolve('webpack-cli/bin/utils/convert-argv');
-    convertArgvPath = 'webpack-cli/bin/utils/convert-argv';
-  } catch (e) {
-    convertArgvPath = 'webpack-cli/bin/convert-argv';
+const processConfigAndOptions = (argv) => {
+  const configPath = path.join(cwd, argv.config);
+  if (!fs.existsSync(configPath)) {
+    throw new Error('webpack config file path is required');
   }
-  // eslint-disable-next-line import/no-extraneous-dependencies
-  // eslint-disable-next-line import/no-dynamic-require
-  const config = require(convertArgvPath)(yargs, argv, {
-    outputFilename: '/bundle.js',
-  });
+  const config = require(configPath);
 
-  return config;
-};
-
-const processOptions = (argv, config) => {
   const firstWpOpt = Array.isArray(config) ? config[0] : config;
   const options = firstWpOpt.devServer || {};
 
   // This updates both config and firstWpOpt
-  firstWpOpt.mode = firstWpOpt.mode || 'development';
+  firstWpOpt.mode = argv.mode || firstWpOpt.mode || 'development';
 
-  if (argv.host && (argv.host !== 'localhost' || !options.host)) {
-    options.host = argv.host;
+  if (!options.host) {
+    options.host = 'localhost';
   }
-
-  if (argv.public) {
-    options.public = argv.public;
+  if (!options.port) {
+    options.port = 8888;
   }
-
-  if (argv.profile) {
-    options.profile = argv.profile;
+  if (!options.contentBase) {
+    options.contentBase = '/';
   }
-
-  if (argv.progress) {
-    options.progress = argv.progress;
-  }
-
   if (!options.publicPath) {
-    // eslint-disable-next-line
-    options.publicPath =
-      (firstWpOpt.output && firstWpOpt.output.publicPath) || '';
+    options.publicPath = (firstWpOpt.output && firstWpOpt.output.publicPath) || '';
 
     if (
       !isAbsoluteUrl(String(options.publicPath)) &&
@@ -94,104 +69,7 @@ const processOptions = (argv, config) => {
     }
   }
 
-  if (!options.filename && firstWpOpt.output && firstWpOpt.output.filename) {
-    options.filename = firstWpOpt.output && firstWpOpt.output.filename;
-  }
-
-  if (!options.watchOptions && firstWpOpt.watchOptions) {
-    options.watchOptions = firstWpOpt.watchOptions;
-  }
-
-  if (argv.stdin) {
-    process.stdin.on('end', () => {
-      // eslint-disable-next-line no-process-exit
-      process.exit(0);
-    });
-
-    process.stdin.resume();
-  }
-
-  // TODO https://github.com/webpack/webpack-dev-server/issues/616 (v4)
-  // We should prefer CLI arg under config, now we always prefer `hot` from `devServer`
-  if (!options.hot) {
-    options.hot = argv.hot;
-  }
-
-  // TODO https://github.com/webpack/webpack-dev-server/issues/616 (v4)
-  // We should prefer CLI arg under config, now we always prefer `hotOnly` from `devServer`
-  if (!options.hotOnly) {
-    options.hotOnly = argv.hotOnly;
-  }
-
-  // TODO https://github.com/webpack/webpack-dev-server/issues/616 (v4)
-  // We should prefer CLI arg under config, now we always prefer `clientLogLevel` from `devServer`
-  if (!options.clientLogLevel && argv.clientLogLevel) {
-    options.clientLogLevel = argv.clientLogLevel;
-  }
-
-  if (argv.contentBase) {
-    options.contentBase = argv.contentBase;
-
-    if (Array.isArray(options.contentBase)) {
-      options.contentBase = options.contentBase.map((p) => path.resolve(p));
-    } else if (/^[0-9]$/.test(options.contentBase)) {
-      options.contentBase = +options.contentBase;
-    } else if (!isAbsoluteUrl(String(options.contentBase))) {
-      options.contentBase = path.resolve(options.contentBase);
-    }
-  }
-  // It is possible to disable the contentBase by using
-  // `--no-content-base`, which results in arg["content-base"] = false
-  else if (argv.contentBase === false) {
-    options.contentBase = false;
-  }
-
-  if (argv.watchContentBase) {
-    options.watchContentBase = true;
-  }
-
-  if (!options.stats) {
-    options.stats = firstWpOpt.stats || { cached: false, cachedAssets: false };
-  }
-
-  if (
-    typeof options.stats === 'object' &&
-    typeof options.stats.colors === 'undefined' &&
-    argv.color
-  ) {
-    options.stats = Object.assign({}, options.stats, { colors: argv.color });
-  }
-
-  if (argv.lazy) {
-    options.lazy = true;
-  }
-
-  if (argv.key) {
-    options.key = argv.key;
-  }
-
-  if (argv.inline === false) {
-    options.inline = false;
-  }
-
-  if (argv.compress) {
-    options.compress = true;
-  }
-
-  if (argv.useLocalIp) {
-    options.useLocalIp = true;
-  }
-
-  // Kind of weird, but ensures prior behavior isn't broken in cases
-  // that wouldn't throw errors. E.g. both argv.port and options.port
-  // were specified, but since argv.port is 8080, options.port will be
-  // tried first instead.
-  options.port =
-    argv.port === '3000'
-      ? (options.port || argv.port)
-      : (argv.port || options.port);
-
-  return options;
+  return { config, options };
 };
 
-module.exports = { processArgs, processConfig, processOptions };
+module.exports = { processArgs, processConfigAndOptions };

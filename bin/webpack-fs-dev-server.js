@@ -6,12 +6,11 @@
 
 // node_modules
 const webpack = require('webpack');
-const yargs = require('yargs');
 const cli = require('./cli');
 
 // lib
 const { createServer } = require('../lib/server');
-const { info, error } = require('../lib/utils/colors');
+const { error } = require('../lib/utils/colors');
 const { createLogger } = require('../lib/utils/logger');
 const { setupExitSignals } = require('../lib/utils/signals');
 
@@ -25,7 +24,7 @@ function startDevServer(config, options) {
     compiler = webpack(config);
   } catch (err) {
     if (err instanceof webpack.WebpackOptionsValidationError) {
-      logger.error(error(options.stats.colors, err.message));
+      logger.error(error(err.message));
       // eslint-disable-next-line no-process-exit
       process.exit(1);
     }
@@ -37,7 +36,7 @@ function startDevServer(config, options) {
     serverData.server = server;
   } catch (err) {
     if (err.name === 'ValidationError') {
-      logger.error(error(options.stats.colors, err.message));
+      logger.error(error(err.message));
       // eslint-disable-next-line no-process-exit
       process.exit(1);
     }
@@ -54,18 +53,15 @@ function startDevServer(config, options) {
     config.watchOptions || { aggregateTimeout: 300, poll: undefined },
     (err, stats) => {
       if (err) {
-        logger.error(error(true, err.message));
+        logger.error(error(err.message));
       }
       logger.info(stats.toString({ chunks: false, colors: true }));
     }
   );
 }
 
-// Process arguments
-const argv = cli.processArgs(yargs);
-const config = cli.processConfig(argv);
-const options = cli.processOptions(argv, config);
+const argv = cli.processArgs();
+const { config, options } = cli.processConfigAndOptions(argv);
 
-// Run express server with webpack
 setupExitSignals(serverData);
 startDevServer(config, options);
